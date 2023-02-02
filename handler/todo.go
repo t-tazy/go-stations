@@ -19,10 +19,44 @@ func NewTODOHandler(svc *service.TODOService) *TODOHandler {
 	}
 }
 
+func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	switch r.Method {
+	case "POST":
+		var body model.CreateTODORequest
+		// http requestを解析
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			fmt.Printf("%v", err)
+			return
+		}
+		// 簡易バリデーション
+		if body.Subject == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println("validation error")
+			return
+		}
+		rsp, err := h.Create(ctx, &body)
+		if err != nil {
+			fmt.Printf("%v", err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(rsp); err != nil {
+			fmt.Printf("%v", err)
+			return
+		}
+	}
+}
+
 // Create handles the endpoint that creates the TODO.
 func (h *TODOHandler) Create(ctx context.Context, req *model.CreateTODORequest) (*model.CreateTODOResponse, error) {
-	_, _ = h.svc.CreateTODO(ctx, "", "")
-	return &model.CreateTODOResponse{}, nil
+	todo, err := h.svc.CreateTODO(ctx, req.Subject, req.Description)
+	fmt.Println(todo)
+	if err != nil {
+		return nil, err
+	}
+	return &model.CreateTODOResponse{*todo}, nil
 }
 
 // Read handles the endpoint that reads the TODOs.
