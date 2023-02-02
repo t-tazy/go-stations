@@ -41,6 +41,35 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+	case "PUT":
+		var body model.UpdateTODORequest
+		// http requestを解析
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			fmt.Printf("%v", err)
+			return
+		}
+		// 簡易バリデーション
+		if body.ID == 0 || body.Subject == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println("validation error")
+			return
+		}
+		rsp, err := h.Update(ctx, &body)
+		if err != nil {
+			if errors.Is(err, &model.ErrNotFound{}) {
+				w.WriteHeader(http.StatusNotFound)
+				fmt.Println("Not Foundのエラー")
+				return
+			}
+			fmt.Printf("%v", err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(rsp); err != nil {
+			fmt.Printf("%v", err)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(rsp); err != nil {
 			fmt.Printf("%v", err)
@@ -67,8 +96,12 @@ func (h *TODOHandler) Read(ctx context.Context, req *model.ReadTODORequest) (*mo
 
 // Update handles the endpoint that updates the TODO.
 func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) (*model.UpdateTODOResponse, error) {
-	_, _ = h.svc.UpdateTODO(ctx, 0, "", "")
-	return &model.UpdateTODOResponse{}, nil
+	todo, err := h.svc.UpdateTODO(ctx, req.ID, req.Subject, req.Description)
+	fmt.Printf("update後のtodo確認: %+v", todo)
+	if err != nil {
+		return nil, err
+	}
+	return &model.UpdateTODOResponse{*todo}, nil
 }
 
 // Delete handles the endpoint that deletes the TODOs.
