@@ -70,6 +70,29 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("%v", err)
 			return
 		}
+	case "GET":
+		var body model.ReadTODORequest
+		//  クエリパラメータ取得
+		query := r.URL.Query()
+		prevID, _ := strconv.Atoi(query.Get("prev_id"))
+		body.PrevID = int64(prevID)
+		size, _ := strconv.Atoi(query.Get("size"))
+		if size == 0 {
+			size = 5
+		}
+		body.Size = int64(size)
+
+		rsp, err := h.Read(ctx, &body)
+		if err != nil {
+			fmt.Printf("%v", err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(rsp); err != nil {
+			fmt.Printf("%v", err)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(rsp); err != nil {
 			fmt.Printf("%v", err)
@@ -90,8 +113,12 @@ func (h *TODOHandler) Create(ctx context.Context, req *model.CreateTODORequest) 
 
 // Read handles the endpoint that reads the TODOs.
 func (h *TODOHandler) Read(ctx context.Context, req *model.ReadTODORequest) (*model.ReadTODOResponse, error) {
-	_, _ = h.svc.ReadTODO(ctx, 0, 0)
-	return &model.ReadTODOResponse{}, nil
+	todos, err := h.svc.ReadTODO(ctx, req.PrevID, req.Size)
+	fmt.Printf("get後のtodos確認: %+v", todos)
+	if err != nil {
+		return nil, err
+	}
+	return &model.ReadTODOResponse{todos}, nil
 }
 
 // Update handles the endpoint that updates the TODO.
