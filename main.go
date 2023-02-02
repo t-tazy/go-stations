@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -51,6 +53,9 @@ func realMain() error {
 	mux := router.NewRouter(todoDB)
 
 	// TODO: サーバーをlistenする
+	if err := http.ListenAndServe(port, mux); err != nil {
+		fmt.Println("failed to terminate server")
+	}
 
 	return nil
 }
