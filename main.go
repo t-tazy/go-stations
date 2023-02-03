@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/TechBowl-japan/go-stations/config"
 	"github.com/TechBowl-japan/go-stations/db"
 	"github.com/TechBowl-japan/go-stations/handler/router"
 )
@@ -20,20 +20,7 @@ func main() {
 
 func realMain() error {
 	// config values
-	const (
-		defaultPort   = ":8080"
-		defaultDBPath = ".sqlite3/todo.db"
-	)
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = defaultDBPath
-	}
+	cfg := config.New()
 
 	// set time zone
 	var err error
@@ -43,7 +30,7 @@ func realMain() error {
 	}
 
 	// set up sqlite3
-	todoDB, err := db.NewDB(dbPath)
+	todoDB, err := db.NewDB(cfg.DbPath)
 	if err != nil {
 		return err
 	}
@@ -53,7 +40,7 @@ func realMain() error {
 	mux := router.NewRouter(todoDB)
 
 	// TODO: サーバーをlistenする
-	if err := http.ListenAndServe(port, mux); err != nil {
+	if err := http.ListenAndServe(cfg.Port, mux); err != nil {
 		fmt.Println("failed to terminate server")
 	}
 
