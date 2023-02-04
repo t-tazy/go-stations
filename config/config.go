@@ -8,8 +8,10 @@ const (
 )
 
 type Config struct {
-	Port   string
-	DbPath string
+	Port     string
+	DbPath   string
+	UserID   string
+	Password string
 }
 
 // 環境変数から取得した情報を詰め込む
@@ -26,6 +28,9 @@ func New() *Config {
 		dbPath = defaultDBPath
 	}
 	cfg.DbPath = dbPath
+
+	cfg.UserID = os.Getenv("BASIC_AUTH_USER_ID")
+	cfg.Password = os.Getenv("BASIC_AUTH_PASSWORD")
 
 	return &cfg
 }
