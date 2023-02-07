@@ -1,24 +1,24 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/TechBowl-japan/go-stations/config"
 	"github.com/TechBowl-japan/go-stations/db"
 	"github.com/TechBowl-japan/go-stations/handler/router"
+	"github.com/TechBowl-japan/go-stations/server"
 )
 
 func main() {
-	err := realMain()
+	err := realMain(context.Background())
 	if err != nil {
 		log.Fatalln("main: failed to exit successfully, err =", err)
 	}
 }
 
-func realMain() error {
+func realMain(ctx context.Context) error {
 	// config values
 	cfg := config.New()
 
@@ -40,9 +40,6 @@ func realMain() error {
 	mux := router.NewRouter(todoDB, cfg)
 
 	// TODO: サーバーをlistenする
-	if err := http.ListenAndServe(cfg.Port, mux); err != nil {
-		fmt.Println("failed to terminate server")
-	}
-
-	return nil
+	s := server.NewServer(cfg.Port, mux)
+	return s.Run(ctx)
 }
