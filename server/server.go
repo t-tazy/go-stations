@@ -10,11 +10,11 @@ import (
 
 // wrap http.Server
 type Server struct {
-	srv http.Server
+	srv *http.Server
 }
 
 func NewServer(addr string, mux http.Handler) *Server {
-	return &Server{http.Server{
+	return &Server{&http.Server{
 		Addr:    addr,
 		Handler: mux,
 	}}

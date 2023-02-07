@@ -24,8 +24,7 @@ func OsMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		ua := useragent.Parse(r.UserAgent())
 		ctx = context.WithValue(ctx, agentOSKey{}, ua.OS)
-		clone := r.Clone(ctx)
-		next.ServeHTTP(w, clone)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
 }
